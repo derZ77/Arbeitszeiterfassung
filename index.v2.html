@@ -620,11 +620,10 @@ document.getElementById('export-excel').addEventListener('click', async () => {
   const woche = document.getElementById('wochentliche-arbeitszeit').value;
   const jahr = document.getElementById('jahr').value;
   const monat = document.querySelector('.tab.active')?.textContent || '';
-
   const overtime = document.getElementById('overtime').value;
 
   const body = document.querySelectorAll('#month-table-body tr');
-  let rowOffset = 12;
+  let rowOffset = 13;
   body.forEach((row, i) => {
     const diffTgl = row.querySelector('.diff-daily')?.textContent || '';
     const diffMon = row.querySelector('.diff-month')?.textContent || '';
@@ -638,10 +637,10 @@ document.getElementById('export-excel').addEventListener('click', async () => {
   });
 
   XLSX.utils.sheet_add_aoa(ws, [[name]], { origin: 'D4' });
-  XLSX.utils.sheet_add_aoa(ws, [[vorzeichen + vortrag]], { origin: 'H4' });
-  XLSX.utils.sheet_add_aoa(ws, [[woche]], { origin: 'M6' });
-  XLSX.utils.sheet_add_aoa(ws, [[monat]], { origin: 'D6' });
-  XLSX.utils.sheet_add_aoa(ws, [[overtime]], { origin: 'N46' });
+  XLSX.utils.sheet_add_aoa(ws, [[vorzeichen + vortrag]], { origin: 'H5' });
+  XLSX.utils.sheet_add_aoa(ws, [[monat]], { origin: 'D7' });
+  XLSX.utils.sheet_add_aoa(ws, [[woche]], { origin: 'M7' });
+  XLSX.utils.sheet_add_aoa(ws, [[overtime]], { origin: 'N47' });
 
   XLSX.writeFile(wb, 'Arbeitszeiterfassung_Export.xlsx');
 });

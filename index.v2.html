@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Arbeitszeiterfassung</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .app-header {
+      background-color: #00A86B;
+      padding: 2rem;
+      text-align: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .personal-data-block {
+      background-color: #00A86B;
+      padding: 1.5rem;
+      color: white;
+      margin: 1rem;
+      border-radius: 8px;
+    }
+
+    .personal-data-block h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .personal-data-block .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .personal-data-block .form-row label {
+      width: 200px;
+      font-weight: 500;
+    }
+
+    .personal-data-block .form-row input,
+    .personal-data-block .form-row select {
+      flex: 1;
+      padding: 0.4rem;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .personal-data-block .inline-group {
+      display: flex;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .small {
+      width: 3rem;
+    }
+
+    .month-overview-block {
+      margin: 1rem;
+      padding: 1.5rem;
+      background-color: #fafafa;
+      border: 2px solid #00A86B;
+      border-radius: 8px;
+    }
+
+    .month-overview-block h2 {
+      margin-top: 0;
+      color: #00A86B;
+    }
+
+    .month-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .month-tabs .tab {
+      flex: 1 1 8%;
+      padding: 0.5rem;
+      background: white;
+      border: 1px solid #00A86B;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .month-tabs .tab.active {
+      background: #00A86B;
+      color: white;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .month-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .month-table th,
+    .month-table td {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    .weekend {
+      background-color: #f0f0f0;
+    }
+
+    .holiday {
+      background-color: #fff8b3;
+    }
+  
+    /* Jahresübersicht Block */
+    .year-overview-block {
+      margin: 1rem;
+      padding: 1.5rem;
+      background-color: #fafafa;
+      border: 2px solid #00A86B;
+      border-radius: 8px;
+    }
+    .year-overview-block h2 {
+      margin-top: 0;
+      color: #00A86B;
+    }
+    .year-overview-block .overview-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .year-overview-block label {
+      width: 200px;
+      font-weight: 500;
+    }
+    .year-overview-block input {
+      flex: 1;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+    }
+
+    /* Jahresübersicht */
+    .year-overview-block {
+      margin: 1rem;
+      padding: 1.5rem;
+      background-color: #fafafa;
+      border: 2px solid #00A86B;
+      border-radius: 8px;
+    }
+    .year-overview-block h2 {
+      margin-top: 0;
+      color: #00A86B;
+    }
+    .year-overview-block .overview-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .year-overview-block label {
+      width: 200px;
+      font-weight: 500;
+    }
+    .year-overview-block input {
+      flex: 1;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      margin: 1rem;
+      text-align: center;
+    }
+    .action-buttons button {
+      margin: 0 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #00A86B;
+    }
+    /* Clear button red */
+    .action-buttons button#clear-entries {
+      background-color: #e74c3c;
+    }
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    @media print {
+      .app-header { display: none !important; }
+      .action-buttons { display: none; }
+      .signature-field { display: block; position: fixed; bottom: 2cm; right: 2cm; }
+    }
+    .signature-field { display: none; }
+
+    /* Print settings: landscape A4, hide buttons, signature field bottom right */
+    @page { size: A4 landscape; margin: 1cm; }
+    @media print {
+      .action-buttons { display: none !important; }
+      body { -webkit-print-color-adjust: exact; }
+      .signature-field {
+        display: block !important;
+        position: fixed;
+        bottom: 1cm;
+        right: 1cm;
+      }
+    }
+
+    /* Hide header in print */
+    @media print {
+      .app-header {
+        display: none !important;
+      }
+    }
+</style>
+</head>
+<body>
+
+  <div class="app-header" style="background-color: white; border: 2px solid #00A86B; margin: 1rem auto; padding: 1.5rem; max-width: 800px; border-radius: 8px; position: relative; text-align: center;">
+  <h1 style="margin: 0; font-size: 1.5rem; font-family: sans-serif; color: black;">App zur Arbeitszeiterfassung</h1>
+  <div style="position:absolute; top:1rem; right:1rem; font-size:0.8rem; font-style:italic; color:black;">Version 2.0 12.07.2025</div>
+</div>
+
+  <section class="personal-data-block">
+    <h2>Persönliche Daten</h2>
+    <div class="form-row">
+      <label for="jahr">Kalenderjahr:</label>
+      <select id="jahr">
+      <option value="" disabled selected>Bitte auswählen</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="name">Name:</label>
+      <input type="text" id="name" placeholder="Dein Name" />
+    </div>
+    <div class="form-row">
+      <label>Vortrag aus dem Vorjahr:</label>
+      <div class="inline-group">
+        <select id="vortragzeichen" class="small">
+          <option value="+">+</option>
+          <option value="-">-</option>
+        </select>
+        <input type="text" id="vortrag" placeholder="z. B. 12,5h" />
+      </div>
+    </div>
+    <div class="form-row">
+      <label for="wochentliche-arbeitszeit">Wöchentliche Arbeitszeit:</label>
+      <input type="text" id="wochentliche-arbeitszeit" placeholder="z. B. 40h oder 30,5h" />
+    </div>
+  </section>
+
+  <section class="month-overview-block">
+    <h2>Monatsübersicht</h2>
+    <div class="month-tabs" id="month-tabs"></div>
+    <div class="table-wrapper">
+      <table id="month-table" class="month-table">
+        <thead>
+          <tr>
+            <th>Datum</th><th>Wochentag</th><th>Beginn</th><th>Ende</th><th>Pause</th>
+            <th>Diff (täglich)</th><th>Diff (Monat kum.)</th><th>Diff (Jahr kum.)</th>
+            <th>Besonderheiten</th><th>Bemerkung</th>
+          </tr>
+        </thead>
+        <tbody id="month-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+    <!-- Jahresübersicht Block -->
+  <section class="year-overview-block">
+    <h2>Jahresübersicht</h2>
+    <div class="overview-row">
+      <label for="year-required">Jahres Sollarbeitszeit:</label>
+      <input type="text" id="year-required" readonly>
+    </div>
+    <div class="overview-row">
+      <label for="overtime">Überstunden:</label>
+      <input type="text" id="overtime" readonly>
+    </div>
+  </section>
+
+  
+
+  <div class="action-buttons">
+    <button id="clear-entries">Alle Einträge löschen</button>
+    <button id="export-pdf">Export als PDF</button>
+    <button id="export-excel">Export als Excel</button>
+  </div>
+  <div class="signature-field">
+    ____________________<br>Unterschrift
+  </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      
+    // Button event listeners
+    document.getElementById('clear-entries').addEventListener('click', () => {
+      document.querySelectorAll('#month-table-body tr').forEach(row => {
+        row.querySelectorAll('input, select').forEach(el => { el.value = ''; });
+      });
+      recalcMonth();
+      saveEntries(parseInt(document.getElementById('jahr').value,10), currentMonth);
+      updateYearOverview();
+    });
+    document.getElementById('export-pdf').addEventListener('click', () => {
+      window.print();
+    });
+    document.getElementById('export-excel').addEventListener('click', () => {
+      const wb = XLSX.utils.book_new();
+      // Persönliche Daten
+      const pd = [
+        ['Kalenderjahr', document.getElementById('jahr').value],
+        ['Name', document.getElementById('name').value],
+        ['Vortrag', document.getElementById('vortragzeichen').value + document.getElementById('vortrag').value],
+        ['Wöchentliche Arbeitszeit', document.getElementById('wochentliche-arbeitszeit').value]
+      ];
+      const pd_ws = XLSX.utils.aoa_to_sheet(pd);
+      XLSX.utils.book_append_sheet(wb, pd_ws, 'Persönliche Daten');
+      // Monatsübersicht
+      const tbl = document.getElementById('month-table');
+      const ws = XLSX.utils.table_to_sheet(tbl);
+      XLSX.utils.book_append_sheet(wb, ws, 'Monatsübersicht');
+      // Jahresübersicht
+      const yo = [
+        ['Jahres Sollarbeitszeit', document.getElementById('year-required').value],
+        ['Überstunden', document.getElementById('overtime').value]
+      ];
+      const yo_ws = XLSX.utils.aoa_to_sheet(yo);
+      XLSX.utils.book_append_sheet(wb, yo_ws, 'Jahresübersicht');
+      XLSX.writeFile(wb, 'Arbeitszeiterfassung.xlsx');
+    });
+
+// LocalStorage helpers
+      function saveEntries(year, month) {
+        const data = Array.from(document.querySelectorAll('#month-table-body tr')).map(row => ({
+          start: row.querySelector('.start-time').value,
+          end: row.querySelector('.end-time').value,
+          pause: row.querySelector('.pause').value,
+          special: row.querySelector('.special').value,
+          remark: row.querySelector('.remark').value
+        }));
+        localStorage.setItem(`entries_${year}_${month}`, JSON.stringify(data));
+      }
+
+      function loadEntries(year, month) {
+        const json = localStorage.getItem(`entries_${year}_${month}`);
+        if (!json) return;
+        const data = JSON.parse(json);
+        document.querySelectorAll('#month-table-body tr').forEach((row, i) => {
+          if (data[i]) {
+            row.querySelector('.start-time').value = data[i].start;
+            row.querySelector('.end-time').value = data[i].end;
+            row.querySelector('.pause').value = data[i].pause;
+            row.querySelector('.special').value = data[i].special;
+            row.querySelector('.remark').value = data[i].remark;
+          }
+        });
+      }
+
+      const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+      const weekdayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+      const tabsContainer = document.getElementById('month-tabs');
+      const tableBody = document.getElementById('month-table-body');
+      const yearSelect = document.getElementById('jahr');
+      const weeklyInput = document.getElementById('wochentliche-arbeitszeit');
+      const signSelect = document.getElementById('vortragzeichen');
+      const vortragInput = document.getElementById('vortrag');
+      let monthlyTotals = Array(12).fill(0);
+      let currentMonth = 0;
+
+      function init() {
+        createMonthTabs();
+        renderMonth(currentMonth);
+      }
+
+      function createMonthTabs() {
+        monthNames.forEach((name, index) => {
+          const btn = document.createElement('button');
+          btn.textContent = name;
+          btn.className = 'tab' + (index === currentMonth ? ' active' : '');
+          btn.addEventListener('click', () => {
+            currentMonth = index;
+            updateActiveTab();
+            renderMonth(index);
+            updateYearOverview();
+          });
+          tabsContainer.appendChild(btn);
+        });
+      }
+
+      function updateActiveTab() {
+        const tabs = tabsContainer.querySelectorAll('.tab');
+        tabs.forEach((tab, idx) => {
+          tab.classList.toggle('active', idx === currentMonth);
+        });
+      }
+
+      function renderMonth(monthIdx) {
+        tableBody.innerHTML = '';
+        const year = parseInt(yearSelect.value, 10);
+        const days = new Date(year, monthIdx + 1, 0).getDate();
+
+        for (let day = 1; day <= days; day++) {
+          const dateObj = new Date(year, monthIdx, day);
+          const row = document.createElement('tr');
+          const dow = dateObj.getDay();
+          if (dow === 0 || dow === 6) row.classList.add('weekend');
+          if (isHoliday(dateObj)) row.classList.add('holiday');
+
+          row.innerHTML = `
+            <td>${day}.${monthIdx+1}.${year}</td>
+            <td>${weekdayNames[dow]}</td>
+            <td><input type="time" class="start-time"></td>
+            <td><input type="time" class="end-time"></td>
+            <td class="pause-cell"></td>
+            <td class="diff-daily"></td>
+            <td class="diff-month"></td>
+            <td class="diff-year"></td>
+            <td><select class="special"><option value=""></option><option value="Urlaub">Urlaub</option><option value="Krank">Krank</option><option value="BR">BR</option></select></td>
+            <td><input type="text" class="remark"></td>
+          `;
+          tableBody.appendChild(row);
+          row.querySelector('.pause-cell').appendChild(createPauseSelect());
+          row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', () => { recalcMonth(); saveEntries(year, currentMonth); }));
+        }
+        loadEntries(year, currentMonth);
+          recalcMonth();
+          updateYearOverview();
+      }
+
+      function createPauseSelect() {
+        const select = document.createElement('select');
+        select.className = 'pause';
+        for (let mins=0; mins<=180; mins+=15) {
+          const h=Math.floor(mins/60), m=mins%60;
+          const v=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+          const o=document.createElement('option');
+          o.value=o.textContent=v;
+          select.appendChild(o);
+        }
+        return select;
+      }
+
+      function recalcMonth() {
+        const weekly = parseFloat(weeklyInput.value.replace(',', '.')) || 0;
+        const expDaily = weekly/5;
+        const prevSum = monthlyTotals.slice(0,currentMonth).reduce((a,b)=>a+b,0);
+        let monthSum=0;
+        tableBody.querySelectorAll('tr').forEach(row=>{
+          const s=row.querySelector('.start-time').value;
+          const e=row.querySelector('.end-time').value;
+          const p=row.querySelector('.pause').value;
+          const sp=row.querySelector('.special').value;
+          let diff=0;
+          if(sp) diff = 0;
+          else if (s && e) {
+            const actual = parseTime(e) - parseTime(s) - parseTime(p);
+            diff = actual - expDaily;
+          }
+          monthSum+=diff;
+          monthlyTotals[currentMonth]=monthSum;
+          const monthRounded=Math.round(monthSum*100)/100;
+          const yearCum=prevSum+monthRounded+initialOffset();
+          row.querySelector('.diff-daily').textContent=formatHours(diff);
+          row.querySelector('.diff-month').textContent=formatHours(monthRounded);
+          row.querySelector('.diff-year').textContent=formatHours(yearCum);
+        });
+      }
+
+      function parseTime(str){const [h,m]=str.split(':').map(Number);return (h||0)+(m||0)/60;}
+      function formatHours(v){const s=v>=0?'+':'-';const a=Math.abs(v);const h=Math.floor(a), m=Math.round((a-h)*60);return`${s}${h}:${String(m).padStart(2,'0')}`;}
+      function initialOffset(){const s=signSelect.value==='+'?1:-1;const v=parseFloat(vortragInput.value.replace(',', '.'))||0;return s*v;}
+      
+      
+    // Jahresübersicht Inputs
+    const yearRequiredInput = document.getElementById('year-required');
+    const overtimeInput = document.getElementById('overtime');
+
+    // Arbeitstage im Jahr (Mo–Fr ohne Feiertage)
+    function getWorkingDays(y) {
+      let count = 0;
+      for (let d = new Date(y,0,1); d <= new Date(y,11,31); d.setDate(d.getDate()+1)) {
+        const dow = d.getDay();
+        if (dow === 0 || dow === 6) continue;
+        if (isHoliday(d)) continue;
+        count++;
+      }
+      return count;
+    }
+
+    // Update Jahresübersicht
+    function updateYearOverview() {
+      const y = parseInt(document.getElementById('jahr').value, 10);
+      const days = getWorkingDays(y);
+        // Berechne Jahressoll basierend auf wöchentlicher Arbeitszeit
+        const weekly = parseFloat(weeklyInput.value.replace(',', '.')) || 0;
+        const totalH = days * (weekly / 5);
+        yearRequiredInput.value = totalH.toFixed(2);
+      const cum = initialOffset() + monthlyTotals.reduce((sum, m) => sum + m, 0);
+      const ch = Math.floor(Math.abs(cum));
+      const cm = Math.round((Math.abs(cum) - ch) * 60);
+      overtimeInput.value = `${cum>=0?'+':'-'}${ch}:${String(cm).padStart(2,'0')}`;
+    }
+function isHoliday(d) {
+        const y = d.getFullYear();
+        // Fixed-date holidays in Thüringen
+        const fixed = [
+          new Date(y, 0, 1),   // Neujahrstag, 01.01.
+          new Date(y, 4, 1),   // Tag der Arbeit, 01.05.
+          new Date(y, 8, 20),  // Weltkindertag, 20.09.
+          new Date(y, 9, 3),   // Tag der Deutschen Einheit, 03.10.
+          new Date(y, 9, 31),  // Reformationstag, 31.10.
+          new Date(y, 11, 25), // 1. Weihnachtstag, 25.12.
+          new Date(y, 11, 26)  // 2. Weihnachtstag, 26.12.
+        ];
+        // Calculate Easter for year y (Gauss algorithm)
+        const easter = (function(y) {
+          const a = y % 19, b = Math.floor(y/100), c = y % 100;
+          const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+          const g = Math.floor((b-f+1)/3), h = (19*a + b - d - g + 15) % 30;
+          const i = Math.floor(c/4), k = c % 4;
+          const l = (32 + 2*e + 2*i - h - k) % 7;
+          const m = Math.floor((a + 11*h + 22*l) / 451);
+          const month = Math.floor((h + l - 7*m + 114)/31) - 1;
+          const day = ((h + l - 7*m + 114) % 31) + 1;
+          return new Date(y, month, day);
+        })(y);
+        // Easter-based holidays
+        const easterHolidays = [
+          new Date(easter.getTime() - 2*86400000),  // Karfreitag
+          easter,                                   // Ostersonntag
+          new Date(easter.getTime() + 1*86400000),  // Ostermontag
+          new Date(easter.getTime() + 39*86400000), // Christi Himmelfahrt
+          new Date(easter.getTime() + 50*86400000)  // Pfingstmontag
+        ];
+        const all = fixed.concat(easterHolidays);
+        return all.some(h => h.getTime() === d.getTime());
+      }
+// Feiertage-Logik später
+
+      yearSelect.addEventListener('change', () => { renderMonth(currentMonth); updateYearOverview(); });
+      init();
+    });
+  </script>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js">
+    // Clear entries
+    document.getElementById('clear-entries').addEventListener('click', () => {
+      document.querySelectorAll('#month-table-body tr').forEach(row => {
+        row.querySelectorAll('input, select').forEach(el => { el.value = ''; });
+      });
+      recalcMonth();
+      saveEntries(parseInt(jahr.value,10), currentMonth);
+      updateYearOverview();
+    });
+
+    // Export as PDF
+    document.getElementById('export-pdf').addEventListener('click', () => {
+      window.print();
+    });
+
+    // Export as Excel
+    document.getElementById('export-excel').addEventListener('click', () => {
+      const wb = XLSX.utils.book_new();
+      // Personal Data sheet
+      const pd = [
+        ['Kalenderjahr', document.getElementById('jahr').value],
+        ['Name', document.getElementById('name').value],
+        ['Vortrag', document.getElementById('vortragzeichen').value + document.getElementById('vortrag').value],
+        ['Wöchentl. Arbeitszeit', document.getElementById('wochentliche-arbeitszeit').value]
+      ];
+      const pd_ws = XLSX.utils.aoa_to_sheet(pd);
+      XLSX.utils.book_append_sheet(wb, pd_ws, 'Persönliche Daten');
+
+      // Monatsübersicht sheet
+      const table = document.getElementById('month-table');
+      const tbl_ws = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(wb, tbl_ws, 'Monatsübersicht');
+
+      // Jahresübersicht sheet
+      const yo = [
+        ['Jahres Sollarbeitszeit', document.getElementById('year-required').value],
+        ['Überstunden', document.getElementById('overtime').value]
+      ];
+      const yo_ws = XLSX.utils.aoa_to_sheet(yo);
+      XLSX.utils.book_append_sheet(wb, yo_ws, 'Jahresübersicht');
+
+      // Generate and download
+      XLSX.writeFile(wb, 'Arbeitszeiterfassung.xlsx');
+    });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+document.getElementById('export-excel').addEventListener('click', async () => {
+  const res = await fetch('Vorlage.xlsx');
+  const ab = await res.arrayBuffer();
+  const wb = XLSX.read(ab, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+
+  const name = document.getElementById('name').value;
+  const vorzeichen = document.getElementById('vortragzeichen').value;
+  const vortrag = document.getElementById('vortrag').value;
+  const woche = document.getElementById('wochentliche-arbeitszeit').value;
+  const jahr = document.getElementById('jahr').value;
+  const monat = document.querySelector('.tab.active')?.textContent || '';
+
+  const overtime = document.getElementById('overtime').value;
+
+  const body = document.querySelectorAll('#month-table-body tr');
+  let rowOffset = 12;
+  body.forEach((row, i) => {
+    const diffTgl = row.querySelector('.diff-daily')?.textContent || '';
+    const diffMon = row.querySelector('.diff-month')?.textContent || '';
+    const diffJahr = row.querySelector('.diff-year')?.textContent || '';
+    const special = row.querySelector('.special')?.value || '';
+    const r = rowOffset + i;
+    XLSX.utils.sheet_add_aoa(ws, [[diffTgl]], { origin: 'H' + r });
+    XLSX.utils.sheet_add_aoa(ws, [[diffMon]], { origin: 'K' + r });
+    XLSX.utils.sheet_add_aoa(ws, [[diffJahr]], { origin: 'N' + r });
+    XLSX.utils.sheet_add_aoa(ws, [[special]], { origin: 'O' + r });
+  });
+
+  XLSX.utils.sheet_add_aoa(ws, [[name]], { origin: 'D4' });
+  XLSX.utils.sheet_add_aoa(ws, [[vorzeichen + vortrag]], { origin: 'H4' });
+  XLSX.utils.sheet_add_aoa(ws, [[woche]], { origin: 'M6' });
+  XLSX.utils.sheet_add_aoa(ws, [[monat]], { origin: 'D6' });
+  XLSX.utils.sheet_add_aoa(ws, [[overtime]], { origin: 'N46' });
+
+  XLSX.writeFile(wb, 'Arbeitszeiterfassung_Export.xlsx');
+});
+</script>
+
+</body>
+</html>
